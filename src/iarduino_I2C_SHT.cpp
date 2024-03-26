@@ -57,6 +57,7 @@ bool	iarduino_I2C_SHT::changeAddress	(uint8_t newAddr){																		//	Па
 				if(newAddr==0x00 || newAddr==0x7F){return false;}																//	Запрещаем устанавливать адрес 0x00 и 0x7F.
 			//	Записываем новый адрес:																							//
 				if(_readBytes(REG_BITS_0,1)==false){return false;}																//	Читаем 1 байт регистра «BITS_0» в массив «data».
+				data[0] &= 0b11110111;																							//	Сбрасываем    бит «BLOCK_ADR».
 				data[0] |= 0b00000010;																							//	Устанавливаем бит «SAVE_ADR_EN»
 				if(_writeBytes(REG_BITS_0,1)==false){return false;}																//	Записываем 1 байт в регистр «BITS_0» из массива «data».
 				data[0] = (newAddr<<1)|0x01;																					//	Готовим новый адрес к записи в модуль, установив бит «SAVE_FLASH».
@@ -99,6 +100,7 @@ bool	iarduino_I2C_SHT::setPullI2C		(bool f){																			//	Парамет
 				else { data[0] = (data[1] & ~0b00000100); }																		//	Если флаг «f» сброшен   , то копируем значение из 1 в 0 элемент массива «data» сбросив   бит «SET_I2C_UP».
 			//	Сохраняем получившееся значение в регистр «REG_BITS_0»:															//
 				if(_writeBytes(REG_BITS_0,1)==false ){ return false; }															//	Записываем 1 байт в регистр «REG_BITS_0» из массива «data».
+				delay(50);																										//	Даём время для сохранения данных в энергонезависимую память модуля.
 				return true;																									//	Возвращаем флаг успеха.
 			}else{																												//	Иначе, если модуль не инициализирован, то ...
 				return false;																									//	Возвращаем ошибку
