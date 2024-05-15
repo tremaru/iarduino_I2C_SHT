@@ -1,13 +1,11 @@
 #include "iarduino_I2C_SHT.h"																									//
 																																//
 //		Инициализация модуля:																									//	Возвращаемое значение: результат инициализации.
-bool	iarduino_I2C_SHT::begin			(void){																					//	Параметр: отсутствует
-		//	Инициируем работу с шиной I2C:																						//
-			objI2C->begin(100);																									//	Инициируем передачу данных по шине I2C на скорости 100 кГц.
+bool	iarduino_I2C_SHT::_begin		(void){																					//	Параметр: отсутствует
 		//	Если адрес не указан, то ищим модуль на шине I2C:																	//
 			if(valAddrTemp==0){																									//
 				for(int i=1; i<127; i++){																						//	Проходим по всем адресам на шине I2C
-					if( objI2C->checkAddress(i)											){	valAddr=i; delay(2);				//	Если на шине I2C есть устройство с адресом i, то используем этот адрес для проверки найденного модуля...
+					if( selI2C->checkAddress(i)											){	valAddr=i; delay(2);				//	Если на шине I2C есть устройство с адресом i, то используем этот адрес для проверки найденного модуля...
 					if(_readBytes(REG_MODEL,4)											){										//	Читаем 4 байта начиная с регистра «REG_MODEL» в массив «data».
 					if( data[0]     == DEF_MODEL_SHT									){										//	Если у модуля с адресом i в регистре «MODEL»   (data[0]) хранится значение DEF_MODEL_SHT, то ...
 					if((data[2]>>1) == i                 || data[2] == 0xFF				){										//	Если у модуля с адресом i в регистре «ADDRESS» (data[2]) хранится значение i (адрес+младший бит) или 0xFF (адрес не задавался), то ...
@@ -19,7 +17,7 @@ bool	iarduino_I2C_SHT::begin			(void){																					//	Параметр: 
 		//	Если модуль не найден, то возвращаем ошибку инициализации:															//
 			if( valAddrTemp == 0														){	valAddr=0; return false;}			//
 		//	Проверяем наличие модуля на шине I2C:																				//
-			if( objI2C->checkAddress(valAddrTemp) == false								){	valAddr=0; return false;}			//	Если на шине I2C нет устройств с адресом valAddrTemp, то возвращаем ошибку инициализации
+			if( selI2C->checkAddress(valAddrTemp) == false								){	valAddr=0; return false;}			//	Если на шине I2C нет устройств с адресом valAddrTemp, то возвращаем ошибку инициализации
 			valAddr=valAddrTemp;																								//	Сохраняем адрес модуля на шине I2C.
 		//	Проверяем значения регистров модуля:																				//
 			if(_readBytes(REG_MODEL,4)==false											){	valAddr=0; return false;}			//	Если не удалось прочитать 4 байта в массив «data» из модуля начиная с регистра «REG_MODEL», то возвращаем ошибку инициализации.
@@ -40,6 +38,8 @@ bool	iarduino_I2C_SHT::reset			(void){																					//	Параметр:	
 				if(_readBytes(REG_BITS_0,1)==false){return false;}																//	Читаем 1 байт регистра «BITS_0» в массив «data».
 				data[0] |= 0b10000000;																							//	Устанавливаем бит «SET_RESET»
 				if(_writeBytes(REG_BITS_0,1)==false){return false;}																//	Записываем 1 байт в регистр «BITS_0» из массива «data».
+			//	Переинициируем шину в связи с программным отключением подтяжек шины I2C в модуле:								//
+				delay(10); selI2C->begin();																						//	Ждём восстановление подтяжек линий SCL/SDA и переинициируем работу с шиной I2C.
 			//	Ждём установки флага завершения перезагрузки:																	//
 				do{ if(_readBytes(REG_FLAGS_0,1)==false){return false;} }														//	Читаем 1 байт регистра «REG_FLAGS_0» в массив «data».
 				while( (data[0]&0b10000000) == 0);																				//	Повторяем чтение пока не установится флаг «FLG_RESET».
@@ -64,7 +64,7 @@ bool	iarduino_I2C_SHT::changeAddress	(uint8_t newAddr){																		//	Па
 				if(_writeBytes(REG_ADDRESS,1)==false){return false;}															//	Записываем 1 байт в регистр «ADDRESS» из массива «data».
 				delay(200);																										//	Даём более чем достаточное время для применения модулем нового адреса.
 			//	Проверяем наличие модуля с новым адресом на шине I2C:															//
-				if(objI2C->checkAddress(newAddr)==false){return false;}															//	Если на шине I2C нет модуля с адресом newAddr, то возвращаем ошибку.
+				if(selI2C->checkAddress(newAddr)==false){return false;}															//	Если на шине I2C нет модуля с адресом newAddr, то возвращаем ошибку.
 				valAddr     = newAddr;																							//	Сохраняем новый адрес как текущий.
 				valAddrTemp = newAddr;																							//	Сохраняем новый адрес как указанный.
 				return true;																									//	Возвращаем флаг успеха.
@@ -206,7 +206,7 @@ bool	iarduino_I2C_SHT::setPeriod		(float tim){																			//	Параме
 bool	iarduino_I2C_SHT::_readBytes		(uint8_t reg, uint8_t sum){															//	Параметры:				reg - номер первого регистра, sum - количество читаемых байт.
 			bool	result=false;																								//	Определяем флаг       для хранения результата чтения.
 			uint8_t	sumtry=10;																									//	Определяем переменную для подсчёта количества оставшихся попыток чтения.
-			do{	result = objI2C->readBytes(valAddr, reg, data, sum);															//	Считываем из модуля valAddr, начиная с регистра reg, в массив data, sum байт.
+			do{	result = selI2C->readBytes(valAddr, reg, data, sum);															//	Считываем из модуля valAddr, начиная с регистра reg, в массив data, sum байт.
 				sumtry--;	if(!result){delay(1);}																				//	Уменьшаем количество попыток чтения и устанавливаем задержку при неудаче.
 			}	while		(!result && sumtry>0);																				//	Повторяем чтение если оно завершилось неудачей, но не более sumtry попыток.
 			delayMicroseconds(500);																								//	Между пакетами необходимо выдерживать паузу.
@@ -217,7 +217,7 @@ bool	iarduino_I2C_SHT::_readBytes		(uint8_t reg, uint8_t sum){															//	
 bool	iarduino_I2C_SHT::_writeBytes	(uint8_t reg, uint8_t sum, uint8_t num){												//	Параметры:				reg - номер первого регистра, sum - количество записываемых байт, num - номер первого элемента массива data.
 			bool	result=false;																								//	Определяем флаг       для хранения результата записи.
 			uint8_t	sumtry=10;																									//	Определяем переменную для подсчёта количества оставшихся попыток записи.
-			do{	result = objI2C->writeBytes(valAddr, reg, &data[num], sum);														//	Записываем в модуль valAddr начиная с регистра reg, sum байи из массива data начиная с элемента num.
+			do{	result = selI2C->writeBytes(valAddr, reg, &data[num], sum);														//	Записываем в модуль valAddr начиная с регистра reg, sum байи из массива data начиная с элемента num.
 				sumtry--;	if(!result){delay(1);}																				//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 			}	while		(!result && sumtry>0);																				//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 			delay(10);																											//	Ждём применения модулем записанных данных.
