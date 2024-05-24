@@ -1,5 +1,5 @@
 //	Библиотека для работы с датчиком температуры и влажности, I2C-flash для Arduino: https://iarduino.ru/shop/Sensory-Datchiki/datchik-temperatury-i-vlazhnosti-i2c-trema-modul-v2-0.html
-//  Версия: 1.0.4
+//  Версия: 1.0.5
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: https://iarduino.ru/file/519.html
 //  Подробное описание функций бибилиотеки доступно по ссылке: https://wiki.iarduino.ru/page/SHT-trema-i2c/
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
