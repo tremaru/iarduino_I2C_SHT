@@ -1,5 +1,5 @@
 //	Библиотека для работы с датчиком температуры и влажности, I2C-flash для Arduino: https://iarduino.ru/shop/Sensory-Datchiki/datchik-temperatury-i-vlazhnosti-i2c-trema-modul-v2-0.html
-//  Версия: 1.0.5
+//  Версия: 1.0.6
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: https://iarduino.ru/file/519.html
 //  Подробное описание функций бибилиотеки доступно по ссылке: https://wiki.iarduino.ru/page/SHT-trema-i2c/
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -60,10 +60,10 @@ class iarduino_I2C_SHT{																													//
 		}																																//
 	/**	Пользовательские функции **/																									//
 		#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__)																//
-		bool				begin						(TwoWire* i=&Wire ){ selI2C->begin(i); return _begin(); }						//	Определяем функцию инициализации модуля								(Параметр:  объект для работы с аппаратной шиной I2C).
+		bool				begin						(TwoWire* i=&Wire ){ selI2C->init(i); return _begin(); }						//	Определяем функцию инициализации модуля								(Параметр:  объект для работы с аппаратной шиной I2C).
 		#endif																															//
 		#if defined(iarduino_I2C_Software_h)																							//
-		bool				begin						(SoftTwoWire* i   ){ selI2C->begin(i); return _begin(); }						//	Определяем функцию инициализации модуля								(Параметр:  объект для работы с программной шиной I2C).
+		bool				begin						(SoftTwoWire* i   ){ selI2C->init(i); return _begin(); }						//	Определяем функцию инициализации модуля								(Параметр:  объект для работы с программной шиной I2C).
 		#endif																															//
 		bool				reset						(void													);						//	Объявляем  функцию перезагрузки модуля								(Параметр:  отсутствует).
 		bool				changeAddress				(uint8_t												);						//	Объявляем  функцию смены адреса модуля на шине I2C					(Параметр:  новый адрес модуля).
