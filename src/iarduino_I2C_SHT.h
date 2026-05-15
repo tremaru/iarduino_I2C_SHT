@@ -1,5 +1,5 @@
 //	Библиотека для работы с датчиком температуры и влажности, I2C-flash для Arduino: https://iarduino.ru/shop/Sensory-Datchiki/datchik-temperatury-i-vlazhnosti-i2c-trema-modul-v2-0.html
-//  Версия: 1.0.7
+//  Версия: 1.0.8
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: https://iarduino.ru/file/518.html
 //  Подробное описание функций бибилиотеки доступно по ссылке: https://wiki.iarduino.ru/page/SHT-trema-i2c/
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -59,7 +59,7 @@ class iarduino_I2C_SHT{																													//
 							selI2C					=	new iarduino_I2C_Select;														//	Переопределяем указатель selI2C на объект производного класса iarduino_I2C_Select.
 		}																																//
 	/**	Пользовательские функции **/																									//
-		#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__)																//
+		#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire или платы её поддерживают...
 		bool				begin						(TwoWire* i=&Wire ){ selI2C->init(i); return _begin(); }						//	Определяем функцию инициализации модуля								(Параметр:  объект для работы с аппаратной шиной I2C).
 		#endif																															//
 		#if defined(iarduino_I2C_Software_h)																							//
